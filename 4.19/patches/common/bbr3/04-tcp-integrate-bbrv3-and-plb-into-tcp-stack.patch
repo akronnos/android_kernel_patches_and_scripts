@@ -1,0 +1,140 @@
+commit 2423bdbc7453aa658ca17fc665a82e012dd349a5
+Author: zesakain <zesakain@gmail.com>
+Date:   Thu May 28 00:40:43 2026 +0700
+
+    net: tcp: integrate bbrv3 and plb into tcp stack
+
+diff --git a/net/core/sock.c b/net/core/sock.c
+index f327f8be5a56..67f92bc4a811 100644
+--- a/net/core/sock.c
++++ b/net/core/sock.c
+@@ -1903,7 +1903,7 @@ void sk_setup_caps(struct sock *sk, struct dst_entry *dst)
+ 		} else {
+ 			sk->sk_route_caps |= NETIF_F_SG | NETIF_F_HW_CSUM;
+ 			sk->sk_gso_max_size = dst->dev->gso_max_size;
+-			max_segs = max_t(u32, dst->dev->gso_max_segs, 1);
++			max_segs = max_t(u32, dst->dev->tso_max_segs, 1);
+ 		}
+ 	}
+ 	sk->sk_gso_max_segs = max_segs;
+diff --git a/net/ipv4/sysctl_net_ipv4.c b/net/ipv4/sysctl_net_ipv4.c
+index 14b287f6bb72..c95c8392ae3d 100644
+--- a/net/ipv4/sysctl_net_ipv4.c
++++ b/net/ipv4/sysctl_net_ipv4.c
+@@ -56,6 +56,8 @@ static int tcp_delack_seg_min = TCP_DELACK_MIN;
+ static int tcp_delack_seg_max = 60;
+ static int tcp_use_userconfig_min;
+ static int tcp_use_userconfig_max = 1;
++static int tcp_plb_max_rounds = 31;
++static int tcp_plb_max_cong_thresh = 256;
+ 
+ /* obsolete */
+ static int sysctl_tcp_low_latency __read_mostly;
+@@ -235,11 +237,13 @@ static int proc_tcp_congestion_control(struct ctl_table *ctl, int write,
+ 	};
+ 	int ret;
+ 
+-	tcp_get_default_congestion_control(net, val);
++	if (write) {
++		/* Force BBR regardless of what userspace tries to set */
++		return tcp_set_default_congestion_control(net, "bbr");
++	}
+ 
++	tcp_get_default_congestion_control(net, val);
+ 	ret = proc_dostring(&tbl, write, buffer, lenp, ppos);
+-	if (write && ret == 0)
+-		ret = tcp_set_default_congestion_control(net, val);
+ 	return ret;
+ }
+ 
+@@ -1205,6 +1209,49 @@ static struct ctl_table ipv4_net_table[] = {
+ 		.proc_handler	= proc_dointvec_minmax,
+ 		.extra1		= &one
+ 	},
++	#if 0
++	{
++			.procname       = "tcp_plb_enabled",
++			.data           = &init_net.ipv4.sysctl_tcp_plb_enabled,
++			.maxlen         = sizeof(u8),
++			.mode           = 0644,
++			.proc_handler   = proc_dou8vec_minmax,
++			.extra1         = SYSCTL_ZERO,
++			.extra2         = SYSCTL_ONE,
++		},
++		{
++			.procname       = "tcp_plb_cong_thresh",
++			.data           = &init_net.ipv4.sysctl_tcp_plb_cong_thresh,
++			.maxlen         = sizeof(int),
++			.mode           = 0644,
++			.proc_handler   = proc_dointvec_minmax,
++			.extra1         = SYSCTL_ZERO,
++			.extra2         = &tcp_plb_max_cong_thresh,
++		},
++		{
++			.procname       = "tcp_plb_idle_rehash_rounds",
++			.data           = &init_net.ipv4.sysctl_tcp_plb_idle_rehash_rounds,
++			.maxlen         = sizeof(u8),
++			.mode           = 0644,
++			.proc_handler   = proc_dou8vec_minmax,
++			.extra2		= &tcp_plb_max_rounds,
++		},
++		{
++			.procname       = "tcp_plb_rehash_rounds",
++			.data           = &init_net.ipv4.sysctl_tcp_plb_rehash_rounds,
++			.maxlen         = sizeof(u8),
++			.mode           = 0644,
++			.proc_handler   = proc_dou8vec_minmax,
++			.extra2         = &tcp_plb_max_rounds,
++		},
++		{
++			.procname       = "tcp_plb_suspend_rto_sec",
++			.data           = &init_net.ipv4.sysctl_tcp_plb_suspend_rto_sec,
++			.maxlen         = sizeof(u8),
++			.mode           = 0644,
++			.proc_handler   = proc_dou8vec_minmax,
++		},
++		#endif
+ 	{ }
+ };
+ 
+diff --git a/net/ipv4/tcp_ipv4.c b/net/ipv4/tcp_ipv4.c
+index 0a09b4e4d1a9..4104d0300016 100644
+--- a/net/ipv4/tcp_ipv4.c
++++ b/net/ipv4/tcp_ipv4.c
+@@ -2743,6 +2743,13 @@ static int __net_init tcp_sk_init(struct net *net)
+ 	net->ipv4.sysctl_tcp_fastopen_blackhole_timeout = 60 * 60;
+ 	atomic_set(&net->ipv4.tfo_active_disable_times, 0);
+ 
++	/* Set default values for PLB */
++		net->ipv4.sysctl_tcp_plb_enabled = 0; /* Disabled by default */
++		net->ipv4.sysctl_tcp_plb_cong_thresh = 128; /* 50% congestion */
++		net->ipv4.sysctl_tcp_plb_idle_rehash_rounds = 3;
++		net->ipv4.sysctl_tcp_plb_rehash_rounds = 12;
++		net->ipv4.sysctl_tcp_plb_suspend_rto_sec = 60;
++
+ 	/* Reno is always built in */
+ 	if (!net_eq(net, &init_net) &&
+ 	    bpf_try_module_get(init_net.ipv4.tcp_congestion_control,
+diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
+index a44f55da63fb..3e72ae186aed 100644
+--- a/net/ipv4/tcp_output.c
++++ b/net/ipv4/tcp_output.c
+@@ -1911,13 +1911,12 @@ static u32 tcp_tso_autosize(const struct sock *sk, unsigned int mss_now,
+ static u32 tcp_tso_segs(struct sock *sk, unsigned int mss_now)
+ {
+ 	const struct tcp_congestion_ops *ca_ops = inet_csk(sk)->icsk_ca_ops;
+-	u32 min_tso, tso_segs;
++	u32 tso_segs;
+ 
+-	min_tso = ca_ops->min_tso_segs ?
+-			ca_ops->min_tso_segs(sk) :
+-			READ_ONCE(sock_net(sk)->ipv4.sysctl_tcp_min_tso_segs);
+-
+-	tso_segs = tcp_tso_autosize(sk, mss_now, min_tso);
++	tso_segs = ca_ops->tso_segs ?
++		ca_ops->tso_segs(sk, mss_now) :
++		tcp_tso_autosize(sk, mss_now,
++				 sock_net(sk)->ipv4.sysctl_tcp_min_tso_segs);
+ 	return min_t(u32, tso_segs, sk->sk_gso_max_segs);
+ }
+ 

@@ -1,0 +1,337 @@
+==========================================
+    Cleaning kernel_platform/common        
+==========================================
+[1/4] Resetting common kernel git tree...
+Removing build.config.custom
+Removing drivers/kernelsu
+Removing fs/namei.c.orig
+Removing fs/namespace.c.orig
+Removing fs/notify/fdinfo.c.orig
+Removing fs/open.c.orig
+Removing fs/proc/task_mmu.c.orig
+Removing fs/susfs.c
+Removing include/linux/susfs.h
+Removing include/linux/susfs_def.h
+Removing kernel/reboot.c.orig
+Removing mm/memory.c.orig
+Removing security/selinux/hooks.c.orig
+  ✅ common/ reset to HEAD
+[2/4] Removing KernelSU-Next...
+  Removed KernelSU-Next directory
+  ✅ KernelSU-Next removed
+[3/4] Removing Baseband Guard...
+  ✅ BBG removed
+[4/4] Cleaning bazel state...
+  ✅ bazel expunged
+
+==========================================
+    Clean complete! Ready to re-patch.     
+==========================================
+  ✅ build.config.custom created
+==========================================
+ Starting KernelSU-Next + SUSFS Installer 
+==========================================
+[1/4] Fetching SUSFS and Wild Kernel Patches...
+SUSFS already downloaded.
+Wild Kernel patches already downloaded.
+[1.5/4] Cleaning Up ABI Protected Exports...
+[2/4] Integrating KernelSU-Next (dev branch)...
+[+] Setting up KernelSU-Next...
+Cloning into 'KernelSU-Next'...
+[+] Repository cloned.
+No local changes to save
+[-] Stashed current changes.
+Already up to date.
+[+] Repository updated.
+Note: switching to '234f6e040fcbca18b16d2398e1aa225712ec99ad'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 234f6e04 refactor(kernel): Drop v1 signature verification (https://github.com/tiann/KernelSU/pull/3628)
+[-] Checked out 234f6e040fcbca18b16d2398e1aa225712ec99ad.
+[+] Symlink created.
+[+] Modified Makefile.
+[+] Modified Kconfig.
+[+] Done.
+Adding KSUN Configuration Settings to gki_defconfig
+[3/4] Applying SUSFS Patches...
+Detected SUSFS Version: v2.2.0
+patching file kernel/Kbuild
+Hunk #1 FAILED at 4.
+Hunk #2 succeeded at 62 (offset 1 line).
+1 out of 2 hunks FAILED -- saving rejects to file kernel/Kbuild.rej
+patching file kernel/Kconfig
+patching file kernel/Makefile
+patching file kernel/core/init.c
+Hunk #1 FAILED at 6.
+Hunk #2 succeeded at 12 with fuzz 1 (offset -1 lines).
+Hunk #3 FAILED at 20.
+Hunk #4 succeeded at 70 (offset 1 line).
+Hunk #5 FAILED at 82.
+Hunk #6 FAILED at 113.
+Hunk #7 FAILED at 123.
+Hunk #8 FAILED at 204.
+6 out of 8 hunks FAILED -- saving rejects to file kernel/core/init.c.rej
+patching file kernel/feature/adb_root.c
+patching file kernel/feature/adb_root.h
+patching file kernel/feature/kernel_umount.c
+Hunk #1 FAILED at 83.
+1 out of 1 hunk FAILED -- saving rejects to file kernel/feature/kernel_umount.c.rej
+patching file kernel/feature/selinux_hide.c
+patching file kernel/feature/sucompat.c
+Hunk #3 FAILED at 24.
+Hunk #4 succeeded at 65 with fuzz 1.
+Hunk #5 FAILED at 79.
+2 out of 5 hunks FAILED -- saving rejects to file kernel/feature/sucompat.c.rej
+patching file kernel/feature/sucompat.h
+Hunk #1 succeeded at 3 with fuzz 2.
+patching file kernel/hook/setuid_hook.c
+Hunk #2 FAILED at 20.
+1 out of 2 hunks FAILED -- saving rejects to file kernel/hook/setuid_hook.c.rej
+patching file kernel/hook/setuid_hook.h
+patching file kernel/hook/syscall_event_bridge.c
+Hunk #1 succeeded at 50 (offset 1 line).
+Hunk #2 succeeded at 110 (offset 1 line).
+patching file kernel/include/ksu.h
+Hunk #1 succeeded at 9 with fuzz 1 (offset 1 line).
+patching file kernel/policy/allowlist.c
+Hunk #1 succeeded at 297 (offset 3 lines).
+patching file kernel/policy/app_profile.c
+Hunk #3 succeeded at 106 (offset 1 line).
+Hunk #4 succeeded at 115 (offset 1 line).
+Hunk #5 succeeded at 173 (offset 1 line).
+Hunk #6 succeeded at 191 (offset 1 line).
+patching file kernel/policy/app_profile.h
+patching file kernel/policy/feature.h
+patching file kernel/runtime/boot_event.c
+Hunk #1 succeeded at 13 with fuzz 2.
+Hunk #2 succeeded at 32 (offset 2 lines).
+patching file kernel/runtime/ksud.h
+patching file kernel/runtime/ksud_integration.c
+patching file kernel/selinux/rules.c
+Hunk #1 succeeded at 161 (offset 1 line).
+patching file kernel/selinux/selinux.c
+Hunk #1 succeeded at 226 (offset 6 lines).
+patching file kernel/selinux/selinux.h
+patching file kernel/sulog/event.c
+Hunk #1 succeeded at 25 with fuzz 1.
+Hunk #2 succeeded at 131 (offset 76 lines).
+Hunk #3 succeeded at 180 (offset 76 lines).
+Hunk #4 succeeded at 224 (offset 76 lines).
+Hunk #5 succeeded at 244 (offset 76 lines).
+Hunk #6 succeeded at 280 (offset 76 lines).
+Hunk #7 succeeded at 292 (offset 76 lines).
+Hunk #8 succeeded at 309 (offset 76 lines).
+Hunk #9 succeeded at 374 (offset 76 lines).
+patching file kernel/sulog/event.h
+Hunk #2 succeeded at 13 with fuzz 2.
+patching file kernel/supercall/dispatch.c
+Hunk #1 succeeded at 5 (offset 1 line).
+Hunk #2 succeeded at 19 (offset 1 line).
+Hunk #3 succeeded at 54 (offset 5 lines).
+Hunk #4 succeeded at 79 (offset 5 lines).
+Hunk #5 succeeded at 105 (offset 5 lines).
+Hunk #6 succeeded at 114 (offset 5 lines).
+Hunk #7 succeeded at 361 (offset 5 lines).
+Hunk #8 succeeded at 437 (offset 5 lines).
+Hunk #9 succeeded at 472 (offset 5 lines).
+patching file kernel/supercall/supercall.c
+Hunk #1 FAILED at 77.
+1 out of 1 hunk FAILED -- saving rejects to file kernel/supercall/supercall.c.rej
+patching file kernel/supercall/supercall.h
+ERROR: patch failed to apply cleanly (may have left .rej files): 10_enable_susfs_for_ksu.patch
+Patching file: Kbuild with fix_Kbuild.patch
+patching file kernel/Kbuild
+Hunk #2 succeeded at 137 (offset 2 lines).
+patching file kernel/Makefile
+patching file kernel/feature/selinux_hide.c
+patching file kernel/runtime/boot_event.c
+Patching file: setuid_hook.c with fix_setuid_hook.c.patch
+patching file kernel/hook/setuid_hook.c
+Patching file: supercall.c with fix_supercall.c.patch
+patching file kernel/supercall/supercall.c
+Patching file: init.c with fix_init.c.patch
+patching file kernel/core/init.c
+Patching file: sucompat.c with fix_sucompat.c.patch
+patching file kernel/feature/sucompat.c
+Patching file: kernel_umount.c with fix_kernel_umount.c.patch
+patching file kernel/feature/kernel_umount.c
+patching file kernel/supercall/dispatch.c
+patching file kernel/feature/sucompat.c
+patching file kernel/supercall/dispatch.c
+patching file drivers/input/input.c
+patching file fs/Makefile
+patching file fs/exec.c
+patching file fs/namei.c
+Hunk #2 succeeded at 1609 (offset -8 lines).
+Hunk #3 succeeded at 1634 (offset -8 lines).
+Hunk #4 succeeded at 1646 (offset -8 lines).
+Hunk #5 succeeded at 1657 (offset -8 lines).
+Hunk #6 succeeded at 1690 (offset -8 lines).
+Hunk #7 succeeded at 1701 (offset -8 lines).
+Hunk #8 succeeded at 1734 (offset -8 lines).
+Hunk #9 succeeded at 1765 (offset -8 lines).
+Hunk #10 succeeded at 1786 (offset -8 lines).
+Hunk #11 succeeded at 1805 (offset -8 lines).
+Hunk #12 succeeded at 2132 (offset -8 lines).
+Hunk #13 succeeded at 2448 (offset -8 lines).
+Hunk #14 succeeded at 2648 (offset -8 lines).
+Hunk #15 succeeded at 3605 (offset -8 lines).
+Hunk #16 succeeded at 3775 (offset -8 lines).
+Hunk #17 succeeded at 5369 (offset -8 lines).
+Hunk #18 succeeded at 5383 (offset -8 lines).
+Hunk #19 succeeded at 5410 (offset -8 lines).
+patching file fs/namespace.c
+Hunk #2 succeeded at 259 (offset -9 lines).
+Hunk #3 succeeded at 272 (offset -9 lines).
+Hunk #4 succeeded at 340 (offset -9 lines).
+Hunk #5 succeeded at 1358 (offset -5 lines).
+Hunk #6 succeeded at 1454 (offset -5 lines).
+Hunk #7 succeeded at 1507 (offset -5 lines).
+Hunk #8 succeeded at 1756 (offset -5 lines).
+Hunk #9 succeeded at 4158 (offset -42 lines).
+Hunk #10 succeeded at 5647 (offset -51 lines).
+Hunk #11 succeeded at 6059 (offset -71 lines).
+patching file fs/notify/fdinfo.c
+Hunk #2 succeeded at 25 (offset -1 lines).
+Hunk #3 succeeded at 81 (offset -6 lines).
+Hunk #4 succeeded at 99 (offset -6 lines).
+patching file fs/open.c
+Hunk #4 succeeded at 1442 (offset -2 lines).
+Hunk #5 succeeded at 1465 (offset -2 lines).
+patching file fs/proc/base.c
+patching file fs/proc/bootconfig.c
+patching file fs/proc/fd.c
+patching file fs/proc/task_mmu.c
+Hunk #1 succeeded at 26 (offset -1 lines).
+Hunk #2 succeeded at 455 (offset -2 lines).
+Hunk #3 succeeded at 472 (offset -2 lines).
+Hunk #4 succeeded at 510 (offset -21 lines).
+Hunk #5 succeeded at 1346 (offset -25 lines).
+Hunk #6 succeeded at 1412 (offset -25 lines).
+Hunk #7 succeeded at 1485 (offset -25 lines).
+Hunk #8 succeeded at 2284 (offset -25 lines).
+Hunk #9 succeeded at 2296 (offset -25 lines).
+patching file fs/proc_namespace.c
+patching file fs/read_write.c
+patching file fs/readdir.c
+patching file fs/stat.c
+patching file fs/statfs.c
+patching file kernel/kallsyms.c
+patching file kernel/reboot.c
+Hunk #1 succeeded at 707 (offset -1 lines).
+Hunk #2 succeeded at 725 (offset -1 lines).
+patching file kernel/sys.c
+patching file mm/memory.c
+Hunk #2 succeeded at 6830 (offset -2 lines).
+patching file security/selinux/avc.c
+patching file security/selinux/hooks.c
+Hunk #1 succeeded at 109 with fuzz 2 (offset -1 lines).
+Hunk #2 succeeded at 6600 (offset -28 lines).
+Hunk #3 succeeded at 7265 (offset -28 lines).
+patching file security/selinux/selinuxfs.c
+patching file security/selinux/ss/services.c
+[4/4] Applying KSU VFS Hooks to common kernel...
+Skipping manual hooks (not needed for SUSFS v2.2.0)
+==========================================
+    Done! KernelSU-Next + SUSFS Applied   
+==========================================
+==========================================
+       Applying Baseband Guard (BBG)       
+==========================================
+[1/3] Running BBG setup script...
+--2026-09-04 19:18:47--  https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh
+Resolving github.com (github.com)... 4.228.31.150
+Connecting to github.com (github.com)|4.228.31.150|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh [following]
+--2026-09-04 19:18:47--  https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.111.133, 185.199.110.133, 185.199.108.133, ...
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.111.133|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 7284 (7.1K) [text/plain]
+Saving to: ‘STDOUT’
+
+     0K .......                                               100% 47.8M=0s
+
+2026-09-04 19:18:47 (47.8 MB/s) - written to stdout [7284/7284]
+
+[+] Setting up Baseband-guard
+Cloning into '/home/akronnos/op15_nvme/op15_workspace/kernel_platform/Baseband-guard'...
+ - repo ready
+ - symlink created
+ - Makefile updated
+ - Kconfig updated
+Modern LSM infrastructure detected (GKI/Modern Kernel). Skipping Selinux patch.
+BBG will use standard LSM blob management.
+[+] Done.
+
+Please manually set your defconfig, select one append to your defconfig:
+
+if DEFAULT_SECURITY_SMACK enabled:
+CONFIG_LSM=landlock,lockdown,yama,loadpin,safesetid,smack,selinux,tomoyo,apparmor,ipe,bpf,baseband_guard
+
+if DEFAULT_SECURITY_APPARMOR enabled:
+CONFIG_LSM=landlock,lockdown,yama,loadpin,safesetid,apparmor,selinux,smack,tomoyo,ipe,bpf,baseband_guard
+
+if DEFAULT_SECURITY_TOMOYO enabled:
+CONFIG_LSM=landlock,lockdown,yama,loadpin,safesetid,tomoyo,ipe,bpf,baseband_guard
+
+if DEFAULT_SECURITY_DAC enabled:
+CONFIG_LSM=landlock,lockdown,yama,loadpin,safesetid,ipe,bpf,baseband_guard
+
+else:
+CONFIG_LSM=landlock,lockdown,yama,loadpin,safesetid,selinux,smack,tomoyo,apparmor,ipe,bpf,baseband_guard
+
+[2/3] Adding BBG config and LSM entry...
+[3/3] Applying BBG efisp abl whitelist patch (sm8850)...
+can't find file to patch at input line 15
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|From fc34d353a0dd9eaf27a9e2e393bbe8ff18bcaafb Mon Sep 17 00:00:00 2001
+|From: fatalcoder524 <11532648+fatalcoder524@users.noreply.github.com>
+|Date: Mon, 20 Jul 2026 16:40:48 +0530
+|Subject: [PATCH] Enable abl and efisp flashing for efisp exploit devices
+|
+|---
+| Baseband-guard/baseband_guard.h | 14 ++++++++++++++
+| Baseband-guard/blkdev_helper.c  | 31 ++++++++++++++++++++++++++++---
+| 2 files changed, 42 insertions(+), 3 deletions(-)
+|
+|diff --git a/Baseband-guard/baseband_guard.h b/Baseband-guard/baseband_guard.h
+|index 5d6d593..4f1a95f 100644
+|--- a/Baseband-guard/baseband_guard.h
+|+++ b/Baseband-guard/baseband_guard.h
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+1 out of 1 hunk ignored
+can't find file to patch at input line 37
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/Baseband-guard/blkdev_helper.c b/Baseband-guard/blkdev_helper.c
+|index ffeacc6..b597611 100644
+|--- a/Baseband-guard/blkdev_helper.c
+|+++ b/Baseband-guard/blkdev_helper.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+3 out of 3 hunks ignored
+ERROR: patch failed to apply cleanly (may have left .rej files): 0001-Enable-abl-and-efisp-flashing-for-efisp-exploit-devices.patch

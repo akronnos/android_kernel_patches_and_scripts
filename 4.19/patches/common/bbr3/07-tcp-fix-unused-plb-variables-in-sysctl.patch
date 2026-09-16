@@ -1,0 +1,21 @@
+commit 8610a32677475e64b8a37ccaf154a4c6ff1621a1
+Author: akronnos <akronnos@protonmail.com>
+Date:   Fri Sep 4 13:03:41 2026 +0000
+
+    net: tcp: fix unused plb variables in sysctl
+
+diff --git a/net/ipv4/sysctl_net_ipv4.c b/net/ipv4/sysctl_net_ipv4.c
+index c95c8392ae3d..9c5f5df94f0a 100644
+--- a/net/ipv4/sysctl_net_ipv4.c
++++ b/net/ipv4/sysctl_net_ipv4.c
+@@ -56,8 +56,10 @@ static int tcp_delack_seg_min = TCP_DELACK_MIN;
+ static int tcp_delack_seg_max = 60;
+ static int tcp_use_userconfig_min;
+ static int tcp_use_userconfig_max = 1;
++#if 0
+ static int tcp_plb_max_rounds = 31;
+ static int tcp_plb_max_cong_thresh = 256;
++#endif
+ 
+ /* obsolete */
+ static int sysctl_tcp_low_latency __read_mostly;
