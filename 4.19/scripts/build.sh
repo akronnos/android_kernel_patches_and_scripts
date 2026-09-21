@@ -67,7 +67,7 @@ mkdir -p out
 make O=out vendor/kona-perf_defconfig vendor/oplus.config vendor/droidspaces.config
 
 # Strip -dirty suffix from kernel version
-sed -i "s/printf '%s' -dirty//g" scripts/setlocalversion
+sed -i "s/printf '%s' -dirty/: ;/g" scripts/setlocalversion
 
 # Inject our custom features
 echo "Injecting feature configs..."

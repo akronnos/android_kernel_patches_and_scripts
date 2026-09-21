@@ -323,6 +323,14 @@ if [ "${FEAT_SUSFS}" -eq 1 ]; then
     chmod +x "${NGKI_DIR}/Patches/susfs_inline_hook_patches.sh"
     "${NGKI_DIR}/Patches/susfs_inline_hook_patches.sh"
 
+    # Fixup: susfs_inline_hook_patches.sh expects "unsigned int lookup_flags = 0;" in vfs_statx,
+    # but 4.19.325 has "unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;".
+    # Ensure struct filename *fname is declared in vfs_statx() under CONFIG_KSU_SUSFS.
+    if grep -q "ksu_handle_stat" fs/stat.c && ! grep -q "struct filename \*fname" fs/stat.c; then
+        log_info "Fixing missing fname declaration in fs/stat.c..."
+        sed -i '/unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;/a\#ifdef CONFIG_KSU_SUSFS\n\tstruct filename *fname = NULL;\n#endif' fs/stat.c
+    fi
+
     # Step 5: Backport patches (idempotent — the scripts check internally)
     log_step "Step 5: Backport patches"
     chmod +x "${NGKI_DIR}/Patches/backport_patches.sh"
