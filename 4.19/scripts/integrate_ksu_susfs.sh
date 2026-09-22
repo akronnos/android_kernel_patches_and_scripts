@@ -168,7 +168,7 @@ if [ "${FEAT_DROIDSPACES}" -eq 1 ]; then
     if [ -f "arch/arm64/configs/vendor/droidspaces.config" ]; then
         log_info "droidspaces.config already present."
     else
-        cp "${DROID_DIR}/droidspaces.config" "arch/arm64/configs/vendor/"
+        cp "${PATCHES_DIR}/common/droidspaces.config" "arch/arm64/configs/vendor/"
         log_info "Copied droidspaces.config"
     fi
 

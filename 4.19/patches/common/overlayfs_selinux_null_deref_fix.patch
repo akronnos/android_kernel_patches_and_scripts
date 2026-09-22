@@ -1,0 +1,156 @@
+--- a/fs/overlayfs/export.c
++++ b/fs/overlayfs/export.c
+@@ -354,6 +354,9 @@ static struct dentry *ovl_dentry_real_at(struct dentry *dentry, int idx)
+ 	if (!idx)
+ 		return ovl_dentry_upper(dentry);
+ 
++	if (!oe)
++		return NULL;
++
+ 	for (i = 0; i < oe->numlower; i++) {
+ 		if (oe->lowerstack[i].layer->idx == idx)
+ 			return oe->lowerstack[i].dentry;
+--- a/fs/overlayfs/inode.c
++++ b/fs/overlayfs/inode.c
+@@ -381,6 +381,9 @@ int __ovl_xattr_get(struct dentry *dentry, struct inode *inode,
+ 	struct dentry *realdentry =
+ 		ovl_i_dentry_upper(inode) ?: ovl_dentry_lower(dentry);
+ 
++	if (!realdentry || !d_inode(realdentry))
++		return -ENODATA;
++
+ 	old_cred = ovl_override_creds(dentry->d_sb);
+ 	res = __vfs_getxattr(realdentry, d_inode(realdentry), name, value,
+ 			     size);
+@@ -396,6 +399,9 @@ int ovl_xattr_get(struct dentry *dentry, struct inode *inode, const char *name,
+ 	struct dentry *realdentry =
+ 		ovl_i_dentry_upper(inode) ?: ovl_dentry_lower(dentry);
+ 
++	if (!realdentry || !d_inode(realdentry))
++		return -ENODATA;
++
+ 	old_cred = ovl_override_creds(dentry->d_sb);
+ 	res = vfs_getxattr(realdentry, name, value, size);
+ 	ovl_revert_creds(old_cred);
+--- a/fs/overlayfs/super.c
++++ b/fs/overlayfs/super.c
+@@ -130,6 +130,9 @@ static int ovl_dentry_revalidate(struct dentry *dentry, unsigned int flags)
+ 	unsigned int i;
+ 	int ret = 1;
+ 
++	if (!oe)
++		return 1;
++
+ 	for (i = 0; i < oe->numlower; i++) {
+ 		struct dentry *d = oe->lowerstack[i].dentry;
+ 
+@@ -153,6 +156,9 @@ static int ovl_dentry_weak_revalidate(struct dentry *dentry, unsigned int flags)
+ 	unsigned int i;
+ 	int ret = 1;
+ 
++	if (!oe)
++		return 1;
++
+ 	for (i = 0; i < oe->numlower; i++) {
+ 		struct dentry *d = oe->lowerstack[i].dentry;
+ 
+--- a/fs/overlayfs/util.c
++++ b/fs/overlayfs/util.c
+@@ -149,7 +149,7 @@ enum ovl_path_type ovl_path_type(struct dentry *dentry)
+ 		/*
+ 		 * Non-dir dentry can hold lower dentry of its copy up origin.
+ 		 */
+-		if (oe->numlower) {
++		if (oe && oe->numlower) {
+ 			if (ovl_test_flag(OVL_CONST_INO, d_inode(dentry)))
+ 				type |= __OVL_PATH_ORIGIN;
+ 			if (d_is_dir(dentry) ||
+@@ -157,7 +157,7 @@ enum ovl_path_type ovl_path_type(struct dentry *dentry)
+ 				type |= __OVL_PATH_MERGE;
+ 		}
+ 	} else {
+-		if (oe->numlower > 1)
++		if (oe && oe->numlower > 1)
+ 			type |= __OVL_PATH_MERGE;
+ 	}
+ 	return type;
+@@ -175,7 +175,7 @@ void ovl_path_lower(struct dentry *dentry, struct path *path)
+ {
+ 	struct ovl_entry *oe = dentry->d_fsdata;
+ 
+-	if (oe->numlower) {
++	if (oe && oe->numlower) {
+ 		path->mnt = oe->lowerstack[0].layer->mnt;
+ 		path->dentry = oe->lowerstack[0].dentry;
+ 	} else {
+@@ -187,7 +187,7 @@ void ovl_path_lowerdata(struct dentry *dentry, struct path *path)
+ {
+ 	struct ovl_entry *oe = dentry->d_fsdata;
+ 
+-	if (oe->numlower) {
++	if (oe && oe->numlower) {
+ 		path->mnt = oe->lowerstack[oe->numlower - 1].layer->mnt;
+ 		path->dentry = oe->lowerstack[oe->numlower - 1].dentry;
+ 	} else {
+@@ -216,16 +216,16 @@ struct dentry *ovl_dentry_upper(struct dentry *dentry)
+ 
+ struct dentry *ovl_dentry_lower(struct dentry *dentry)
+ {
+-	struct ovl_entry *oe = dentry->d_fsdata;
++	struct ovl_entry *oe = dentry ? dentry->d_fsdata : NULL;
+ 
+-	return oe->numlower ? oe->lowerstack[0].dentry : NULL;
++	return (oe && oe->numlower) ? oe->lowerstack[0].dentry : NULL;
+ }
+ 
+ struct ovl_layer *ovl_layer_lower(struct dentry *dentry)
+ {
+-	struct ovl_entry *oe = dentry->d_fsdata;
++	struct ovl_entry *oe = dentry ? dentry->d_fsdata : NULL;
+ 
+-	return oe->numlower ? oe->lowerstack[0].layer : NULL;
++	return (oe && oe->numlower) ? oe->lowerstack[0].layer : NULL;
+ }
+ 
+ /*
+@@ -236,9 +236,9 @@ struct ovl_layer *ovl_layer_lower(struct dentry *dentry)
+  */
+ struct dentry *ovl_dentry_lowerdata(struct dentry *dentry)
+ {
+-	struct ovl_entry *oe = dentry->d_fsdata;
++	struct ovl_entry *oe = dentry ? dentry->d_fsdata : NULL;
+ 
+-	return oe->numlower ? oe->lowerstack[oe->numlower - 1].dentry : NULL;
++	return (oe && oe->numlower) ? oe->lowerstack[oe->numlower - 1].dentry : NULL;
+ }
+ 
+ struct dentry *ovl_dentry_real(struct dentry *dentry)
+@@ -895,7 +895,7 @@ bool ovl_is_metacopy_dentry(struct dentry *dentry)
+ 		return false;
+ 	}
+ 
+-	return (oe->numlower > 1);
++	return (oe && oe->numlower > 1);
+ }
+ 
+ ssize_t ovl_getxattr(struct dentry *dentry, char *name, char **value,
+--- a/security/selinux/hooks.c
++++ b/security/selinux/hooks.c
+@@ -3853,7 +3853,7 @@ static int selinux_file_open(struct file *file)
+ 	struct inode_security_struct *isec;
+ 
+ 	fsec = selinux_file(file);
+-	isec = inode_security(file_inode(file));
++	isec = backing_inode_security(file->f_path.dentry);
+ 	/*
+ 	 * Save inode label and policy sequence number
+ 	 * at open-time so that selinux_file_permission
+@@ -3999,7 +3999,7 @@ static int selinux_kernel_module_from_file(struct file *file)
+ 			return rc;
+ 	}
+ 
+-	isec = inode_security(file_inode(file));
++	isec = backing_inode_security(file->f_path.dentry);
+ 	return avc_has_perm(&selinux_state,
+ 			    sid, isec->sid, SECCLASS_SYSTEM,
+ 				SYSTEM__MODULE_LOAD, &ad);
